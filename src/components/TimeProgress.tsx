@@ -45,8 +45,7 @@ const TimeProgress = ({ value, max, type, label, showValue = true }: TimeProgres
       </div>
       <Progress
         value={percentage}
-        className="h-3 bg-muted"
-        indicatorClassName={cn("transition-all", getColorClass())}
+        className={cn("h-3 bg-muted", getColorClass())}
       />
     </div>
   );

@@ -9,35 +9,36 @@ interface TimerProps {
 }
 
 const Timer = ({ startTime, className }: TimerProps) => {
-  const [elapsedMinutes, setElapsedMinutes] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   
   useEffect(() => {
     if (!startTime) {
-      setElapsedMinutes(0);
+      setElapsedSeconds(0);
       return;
     }
     
     // Initial calculation
     const calcElapsed = () => {
       const now = new Date();
-      const elapsed = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
-      setElapsedMinutes(elapsed);
+      const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      setElapsedSeconds(elapsed);
     };
     
     calcElapsed();
     
-    // Update every minute
-    const interval = setInterval(calcElapsed, 60000);
+    // Update every second for more accurate tracking
+    const interval = setInterval(calcElapsed, 1000);
     
     return () => clearInterval(interval);
   }, [startTime]);
   
-  const hours = Math.floor(elapsedMinutes / 60);
-  const minutes = elapsedMinutes % 60;
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+  const seconds = elapsedSeconds % 60;
   
   return (
     <div className={cn("timer-display", className)}>
-      {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')}
+      {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ActivityType, TimeEntry, HolidayEntry } from '@/lib/timeTracking';
+import { ActivityType, TimeEntry, HolidayEntry, SPAIN_REGULATIONS } from '@/lib/timeTracking';
 import { useToast } from "@/components/ui/use-toast";
 
 interface TimeTrackingContextType {
@@ -99,13 +99,13 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     localStorage.setItem('currentActivity', currentActivity ? JSON.stringify(currentActivity) : '');
   }, [currentEntry, currentActivity]);
   
-  // Check if driver should take a break
+  // Check if driver should take a break - purely informational, no restrictions
   useEffect(() => {
-    if (currentActivity === 'driving' && drivingTimeToday >= 270 && restTimeToday < 45) {
+    if (currentActivity === 'driving' && drivingTimeToday >= SPAIN_REGULATIONS.driving.continuous && restTimeToday < SPAIN_REGULATIONS.rest.break) {
       toast({
-        title: "Tiempo de descanso requerido",
-        description: "Has conducido por 4.5 horas. Se requiere un descanso de 45 minutos.",
-        variant: "destructive",
+        title: "Información de descanso",
+        description: "Según la normativa española, tras 4.5 horas de conducción se recomienda un descanso de 45 minutos.",
+        variant: "default",
       });
     }
   }, [drivingTimeToday, restTimeToday, currentActivity, toast]);
