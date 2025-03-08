@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useTimeTracking } from "@/context/TimeTrackingContext";
@@ -23,9 +23,8 @@ const Dashboard = () => {
   
   const { toast } = useToast();
   
-  // Spanish regulation limits (informative only)
-  const MAX_DRIVING_TIME = SPAIN_REGULATIONS.driving.daily; // 9 hours
-  const MAX_ADDITIONAL_TIME = 3 * 60; // 3 hours as example
+  // Spanish regulation limits
+  const MAX_DRIVING_TIME = SPAIN_REGULATIONS.driving.extendedDaily; // 10 hours
   const RECOMMENDED_REST_TIME = SPAIN_REGULATIONS.rest.daily; // 11 hours
   
   const shouldShowBreakWarning = drivingTimeToday >= SPAIN_REGULATIONS.driving.continuous && restTimeToday < SPAIN_REGULATIONS.rest.break;
@@ -93,25 +92,7 @@ const Dashboard = () => {
         </CardContent>
       </Card>
       
-      {/* Information card with regulations */}
-      <Card className="bg-muted/30 border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <InfoIcon className="w-5 h-5 mr-2 text-muted-foreground" />
-            Normativa de tiempos (Informativo)
-          </CardTitle>
-          <CardDescription>
-            Esta información es puramente orientativa según la normativa española
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
-            La app no impone restricciones de tiempo, solo muestra información sobre los límites legales en España
-          </p>
-        </CardContent>
-      </Card>
-      
-      {/* Warning card - purely informative */}
+      {/* Warning card for break - purely informative */}
       {shouldShowBreakWarning && (
         <Card className="bg-amber-50 border-amber-200">
           <CardContent className="pt-6">
@@ -154,7 +135,7 @@ const Dashboard = () => {
                 value={drivingTimeToday} 
                 max={MAX_DRIVING_TIME} 
                 type="driving" 
-                label="Tiempo utilizado (informativo)" 
+                label="Tiempo utilizado" 
               />
             </CardContent>
           </Card>
@@ -184,7 +165,7 @@ const Dashboard = () => {
                 value={restTimeToday} 
                 max={RECOMMENDED_REST_TIME} 
                 type="rest" 
-                label="Descanso realizado (informativo)" 
+                label="Descanso realizado" 
               />
             </CardContent>
           </Card>
@@ -193,7 +174,7 @@ const Dashboard = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
                 <Clock className="w-5 h-5 mr-2 text-truck-tertiary" />
-                Trabajo adicional
+                Otros Trabajos
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <InfoIcon className="w-4 h-4 ml-2 text-muted-foreground cursor-pointer" />
@@ -212,9 +193,10 @@ const Dashboard = () => {
             <CardContent>
               <TimeProgress 
                 value={additionalTimeToday} 
-                max={MAX_ADDITIONAL_TIME} 
+                max={additionalTimeToday || 1} // Sin límite real, solo para visualización
                 type="additional" 
-                label="Tiempo utilizado (informativo)" 
+                label="Tiempo utilizado" 
+                showMaxValue={false}
               />
             </CardContent>
           </Card>
@@ -251,7 +233,7 @@ function getActivityLabel(type: ActivityType): string {
     case 'rest':
       return 'Descanso';
     case 'additional':
-      return 'Trabajo adicional';
+      return 'Otros Trabajos';
     case 'available':
       return 'Disponibilidad';
   }

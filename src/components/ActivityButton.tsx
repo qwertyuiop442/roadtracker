@@ -32,7 +32,7 @@ const ActivityButton = ({ type, onClick, active, className }: ActivityButtonProp
       case 'rest':
         return 'Descanso';
       case 'additional':
-        return 'Trabajo adicional';
+        return 'Otros Trabajos';
       case 'available':
         return 'Disponibilidad';
     }

@@ -8,9 +8,17 @@ interface TimeProgressProps {
   type: 'driving' | 'rest' | 'additional' | 'available';
   label?: string;
   showValue?: boolean;
+  showMaxValue?: boolean;
 }
 
-const TimeProgress = ({ value, max, type, label, showValue = true }: TimeProgressProps) => {
+const TimeProgress = ({ 
+  value, 
+  max, 
+  type, 
+  label, 
+  showValue = true,
+  showMaxValue = true 
+}: TimeProgressProps) => {
   const percentage = Math.min((value / max) * 100, 100);
   
   const getColorClass = () => {
@@ -39,7 +47,8 @@ const TimeProgress = ({ value, max, type, label, showValue = true }: TimeProgres
         <p className="text-sm font-medium text-muted-foreground">{label || type}</p>
         {showValue && (
           <p className="text-sm font-medium">
-            {formatTime(value)} / {formatTime(max)}
+            {formatTime(value)}
+            {showMaxValue && `/${formatTime(max)}`}
           </p>
         )}
       </div>

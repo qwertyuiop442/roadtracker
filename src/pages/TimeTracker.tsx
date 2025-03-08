@@ -112,7 +112,7 @@ const TimeTracker = () => {
           </TabsTrigger>
           <TabsTrigger value="additional" className="data-[state=active]:bg-truck-tertiary">
             <Clock className="h-4 w-4 mr-1" />
-            <span className="hidden md:inline">Adicional</span>
+            <span className="hidden md:inline">Otros Trabajos</span>
           </TabsTrigger>
           <TabsTrigger value="available" className="data-[state=active]:bg-truck-secondary">
             <Bell className="h-4 w-4 mr-1" />
