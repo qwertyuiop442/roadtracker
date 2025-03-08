@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,6 +27,12 @@ const Dashboard = () => {
   const RECOMMENDED_REST_TIME = SPAIN_REGULATIONS.rest.daily; // 11 hours
   const MAX_AVAILABILITY_TIME = SPAIN_REGULATIONS.available.daily; // 15 hours
   
+  // Helper function to calculate elapsed time in minutes - moved up before first use
+  const calculateElapsedTime = (startTime: Date) => {
+    const now = new Date();
+    return Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
+  };
+  
   // Calculate the time spent in "available" state today
   const availabilityTimeToday = currentActivity === 'available' && currentEntry
     ? calculateElapsedTime(currentEntry.startTime)
@@ -46,12 +51,6 @@ const Dashboard = () => {
     }
     
     startActivity(type);
-  };
-
-  // Helper function to calculate elapsed time in minutes
-  const calculateElapsedTime = (startTime: Date) => {
-    const now = new Date();
-    return Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
   };
 
   return (
