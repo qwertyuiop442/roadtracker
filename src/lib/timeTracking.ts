@@ -1,4 +1,3 @@
-
 export type ActivityType = 'driving' | 'rest' | 'additional' | 'available';
 
 export interface TimeEntry {
@@ -33,6 +32,9 @@ export const SPAIN_REGULATIONS = {
     break: 45,           // 45 minutes break after 4.5 hours driving
     splitBreak1: 15,     // 15 minutes for first part of split break
     splitBreak2: 30      // 30 minutes for second part of split break
+  },
+  available: {
+    daily: 15 * 60       // 15 hours daily availability limit
   }
 };
 
@@ -79,7 +81,7 @@ export const shouldTakeBreak = (drivingTime: number, lastRestTime: number): bool
 };
 
 // For getting the Spanish regulation information in a human-readable format
-export const getRegulationInfo = (type: 'driving' | 'rest' | 'additional'): string[] => {
+export const getRegulationInfo = (type: 'driving' | 'rest' | 'additional' | 'available'): string[] => {
   switch (type) {
     case 'driving':
       return [
@@ -103,6 +105,12 @@ export const getRegulationInfo = (type: 'driving' | 'rest' | 'additional'): stri
         'El tiempo máximo de trabajo semanal: 60 horas',
         'Tiempo máximo de trabajo en dos semanas: 100 horas',
         'El trabajo nocturno no debe exceder las 10 horas en cada período de 24 horas'
+      ];
+    case 'available':
+      return [
+        'Tiempo máximo de disponibilidad diaria: 15 horas',
+        'El tiempo de disponibilidad se considera período de descanso',
+        'No se considera tiempo de conducción ni de otros trabajos'
       ];
     default:
       return [];

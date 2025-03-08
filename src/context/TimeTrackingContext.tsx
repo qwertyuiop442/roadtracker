@@ -11,6 +11,7 @@ interface TimeTrackingContextType {
   drivingTimeToday: number;
   restTimeToday: number;
   additionalTimeToday: number;
+  availabilityTimeToday: number; // Add availability time
   startActivity: (type: ActivityType) => void;
   stopActivity: () => void;
   addHolidayEntry: (entry: Omit<HolidayEntry, 'id'>) => void;
@@ -49,6 +50,14 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     
   const additionalTimeToday = timeEntries
     .filter(entry => entry.type === 'additional' && new Date(entry.startTime) >= today)
+    .reduce((acc, entry) => {
+      const endTime = entry.endTime || new Date();
+      const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
+      return acc + minutes;
+    }, 0);
+    
+  const availabilityTimeToday = timeEntries
+    .filter(entry => entry.type === 'available' && new Date(entry.startTime) >= today)
     .reduce((acc, entry) => {
       const endTime = entry.endTime || new Date();
       const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
@@ -202,7 +211,7 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       case 'rest':
         return 'Descanso';
       case 'additional':
-        return 'Trabajo adicional';
+        return 'Otros Trabajos';
       case 'available':
         return 'Disponibilidad';
     }
@@ -218,6 +227,7 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
         drivingTimeToday,
         restTimeToday,
         additionalTimeToday,
+        availabilityTimeToday,
         startActivity,
         stopActivity,
         addHolidayEntry,
