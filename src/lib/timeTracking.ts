@@ -1,4 +1,6 @@
+
 export type ActivityType = 'driving' | 'rest' | 'additional' | 'available';
+export type TimeRange = 'day' | 'week' | 'biweek';
 
 export interface TimeEntry {
   id: string;
@@ -35,6 +37,10 @@ export const SPAIN_REGULATIONS = {
   },
   available: {
     daily: 15 * 60       // 15 hours daily availability limit
+  },
+  additional: {
+    weekly: 60 * 60,     // 60 hours weekly maximum
+    biweekly: 100 * 60   // 100 hours over 2 weeks
   }
 };
 
@@ -43,6 +49,13 @@ export const formatMinutes = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+};
+
+// Format time in hours and minutes
+export const formatTime = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
 };
 
 // Calculate elapsed time in minutes
@@ -78,6 +91,83 @@ export const calculateRemainingRest = (
 // For informational purposes only - checks if driver should take a break
 export const shouldTakeBreak = (drivingTime: number, lastRestTime: number): boolean => {
   return drivingTime >= SPAIN_REGULATIONS.driving.continuous && lastRestTime < SPAIN_REGULATIONS.rest.break;
+};
+
+// Get activity time from time entries for a specific timeframe
+export const getActivityTime = (
+  entries: TimeEntry[],
+  activity: ActivityType,
+  startDate: Date,
+  endDate: Date = new Date()
+): number => {
+  return entries
+    .filter(entry => entry.type === activity && new Date(entry.startTime) >= startDate && new Date(entry.startTime) <= endDate)
+    .reduce((acc, entry) => {
+      const entryEnd = entry.endTime || new Date();
+      const minutes = calculateElapsedMinutes(new Date(entry.startTime), entryEnd);
+      return acc + minutes;
+    }, 0);
+};
+
+// Get start date based on time range
+export const getStartDateForRange = (range: TimeRange): Date => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  switch (range) {
+    case 'day':
+      return today;
+    case 'week': {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday as week start
+      return weekStart;
+    }
+    case 'biweek': {
+      const biweekStart = new Date(today);
+      biweekStart.setDate(today.getDate() - 13); // 14 days ago
+      return biweekStart;
+    }
+    default:
+      return today;
+  }
+};
+
+// Checks compliance with regulation limits - returns percentage of limit reached
+export const checkCompliancePercentage = (
+  activityTime: number,
+  activityType: ActivityType,
+  timeRange: TimeRange
+): number => {
+  let limit = 1; // Default to avoid division by zero
+  
+  switch (activityType) {
+    case 'driving':
+      if (timeRange === 'day') limit = SPAIN_REGULATIONS.driving.daily;
+      else if (timeRange === 'week') limit = SPAIN_REGULATIONS.driving.weekly;
+      else if (timeRange === 'biweek') limit = SPAIN_REGULATIONS.driving.biweekly;
+      break;
+    case 'rest':
+      if (timeRange === 'day') limit = SPAIN_REGULATIONS.rest.daily;
+      else if (timeRange === 'week') limit = SPAIN_REGULATIONS.rest.weekly;
+      break;
+    case 'additional':
+      if (timeRange === 'week') limit = SPAIN_REGULATIONS.additional.weekly;
+      else if (timeRange === 'biweek') limit = SPAIN_REGULATIONS.additional.biweekly;
+      else limit = 480; // 8 hours as default for day
+      break;
+    case 'available':
+      limit = SPAIN_REGULATIONS.available.daily;
+      break;
+  }
+  
+  return Math.min(100, (activityTime / limit) * 100);
+};
+
+// Get compliance status
+export const getComplianceStatus = (percentage: number): 'safe' | 'warning' | 'danger' => {
+  if (percentage < 80) return 'safe';
+  if (percentage < 95) return 'warning';
+  return 'danger';
 };
 
 // For getting the Spanish regulation information in a human-readable format

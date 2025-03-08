@@ -1,6 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ActivityType, TimeEntry, HolidayEntry, SPAIN_REGULATIONS } from '@/lib/timeTracking';
+import { 
+  ActivityType, 
+  TimeEntry, 
+  HolidayEntry, 
+  SPAIN_REGULATIONS,
+  getStartDateForRange,
+  getActivityTime 
+} from '@/lib/timeTracking';
 import { useToast } from "@/components/ui/use-toast";
 
 interface TimeTrackingContextType {
@@ -11,7 +18,10 @@ interface TimeTrackingContextType {
   drivingTimeToday: number;
   restTimeToday: number;
   additionalTimeToday: number;
-  availabilityTimeToday: number; // Add availability time
+  availabilityTimeToday: number;
+  drivingTimeWeek: number;
+  drivingTimeBiweek: number;
+  restTimeWeek: number;
   startActivity: (type: ActivityType) => void;
   stopActivity: () => void;
   addHolidayEntry: (entry: Omit<HolidayEntry, 'id'>) => void;
@@ -28,41 +38,21 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [holidayEntries, setHolidayEntries] = useState<HolidayEntry[]>([]);
   
-  // Calculate metrics
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Get date ranges
+  const today = getStartDateForRange('day');
+  const weekStart = getStartDateForRange('week');
+  const biweekStart = getStartDateForRange('biweek');
   
-  const drivingTimeToday = timeEntries
-    .filter(entry => entry.type === 'driving' && new Date(entry.startTime) >= today)
-    .reduce((acc, entry) => {
-      const endTime = entry.endTime || new Date();
-      const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
-      return acc + minutes;
-    }, 0);
-    
-  const restTimeToday = timeEntries
-    .filter(entry => entry.type === 'rest' && new Date(entry.startTime) >= today)
-    .reduce((acc, entry) => {
-      const endTime = entry.endTime || new Date();
-      const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
-      return acc + minutes;
-    }, 0);
-    
-  const additionalTimeToday = timeEntries
-    .filter(entry => entry.type === 'additional' && new Date(entry.startTime) >= today)
-    .reduce((acc, entry) => {
-      const endTime = entry.endTime || new Date();
-      const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
-      return acc + minutes;
-    }, 0);
-    
-  const availabilityTimeToday = timeEntries
-    .filter(entry => entry.type === 'available' && new Date(entry.startTime) >= today)
-    .reduce((acc, entry) => {
-      const endTime = entry.endTime || new Date();
-      const minutes = Math.floor((endTime.getTime() - new Date(entry.startTime).getTime()) / (1000 * 60));
-      return acc + minutes;
-    }, 0);
+  // Calculate metrics for today
+  const drivingTimeToday = getActivityTime(timeEntries, 'driving', today);
+  const restTimeToday = getActivityTime(timeEntries, 'rest', today);
+  const additionalTimeToday = getActivityTime(timeEntries, 'additional', today);
+  const availabilityTimeToday = getActivityTime(timeEntries, 'available', today);
+  
+  // Calculate weekly and biweekly metrics
+  const drivingTimeWeek = getActivityTime(timeEntries, 'driving', weekStart);
+  const drivingTimeBiweek = getActivityTime(timeEntries, 'driving', biweekStart);
+  const restTimeWeek = getActivityTime(timeEntries, 'rest', weekStart);
   
   // Load data from localStorage on initial load
   useEffect(() => {
@@ -113,11 +103,29 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     if (currentActivity === 'driving' && drivingTimeToday >= SPAIN_REGULATIONS.driving.continuous && restTimeToday < SPAIN_REGULATIONS.rest.break) {
       toast({
         title: "Información de descanso",
-        description: "Según la normativa española, tras 4.5 horas de conducción se recomienda un descanso de 45 minutos.",
+        description: "Según la normativa española, tras 4,5 horas de conducción se recomienda un descanso de 45 minutos.",
         variant: "default",
       });
     }
-  }, [drivingTimeToday, restTimeToday, currentActivity, toast]);
+    
+    // Alert when approaching weekly driving limit
+    if (currentActivity === 'driving' && drivingTimeWeek >= SPAIN_REGULATIONS.driving.weekly * 0.9) {
+      toast({
+        title: "Límite semanal de conducción",
+        description: "Te estás acercando al límite de 56 horas de conducción semanal.",
+        variant: "default",
+      });
+    }
+    
+    // Alert when approaching biweekly driving limit
+    if (currentActivity === 'driving' && drivingTimeBiweek >= SPAIN_REGULATIONS.driving.biweekly * 0.9) {
+      toast({
+        title: "Límite bisemanal de conducción",
+        description: "Te estás acercando al límite de 90 horas de conducción en dos semanas.",
+        variant: "default",
+      });
+    }
+  }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, currentActivity, toast]);
   
   // Start a new activity
   const startActivity = (type: ActivityType) => {
@@ -228,6 +236,9 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
         restTimeToday,
         additionalTimeToday,
         availabilityTimeToday,
+        drivingTimeWeek,
+        drivingTimeBiweek,
+        restTimeWeek,
         startActivity,
         stopActivity,
         addHolidayEntry,

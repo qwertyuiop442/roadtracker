@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import TimeTracker from "./pages/TimeTracker";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
+import ActivitySummary from "./pages/ActivitySummary";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="tracker" element={<TimeTracker />} />
             <Route path="calendar" element={<Calendar />} />
+            <Route path="activity-summary" element={<ActivitySummary />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Route>
