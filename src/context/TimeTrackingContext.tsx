@@ -6,7 +6,9 @@ import {
   HolidayEntry, 
   EU_REGULATIONS_2024,
   getStartDateForRange,
-  getActivityTime 
+  getActivityTime,
+  countExtendedDrivingDays,
+  countExtendedAvailabilityDays
 } from '@/lib/timeTracking';
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
@@ -23,11 +25,21 @@ interface TimeTrackingContextType {
   drivingTimeWeek: number;
   drivingTimeBiweek: number;
   restTimeWeek: number;
+  extendedDrivingDays: number;
+  extendedAvailabilityDays: number;
   startActivity: (type: ActivityType) => void;
   stopActivity: () => void;
   addHolidayEntry: (entry: Omit<HolidayEntry, 'id'>) => void;
   removeHolidayEntry: (id: string) => void;
   resetTimeEntries: () => void;
+  addManualTimeEntry: (
+    type: ActivityType, 
+    date: Date, 
+    durationMinutes: number, 
+    notes?: string,
+    exceedsLimits?: boolean
+  ) => void;
+  deleteTimeEntry: (id: string) => void;
 }
 
 const TimeTrackingContext = createContext<TimeTrackingContextType | undefined>(undefined);
@@ -55,6 +67,10 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const drivingTimeBiweek = getActivityTime(timeEntries, 'driving', biweekStart);
   const restTimeWeek = getActivityTime(timeEntries, 'rest', weekStart);
   
+  // Calculate extended days count
+  const extendedDrivingDays = countExtendedDrivingDays(timeEntries);
+  const extendedAvailabilityDays = countExtendedAvailabilityDays(timeEntries);
+  
   // Load data from localStorage on initial load
   useEffect(() => {
     const savedEntries = localStorage.getItem('timeEntries');
@@ -63,11 +79,24 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     const savedCurrentActivity = localStorage.getItem('currentActivity');
     
     if (savedEntries) {
-      setTimeEntries(JSON.parse(savedEntries));
+      const parsedEntries = JSON.parse(savedEntries);
+      // Convert string dates back to Date objects for loaded entries
+      const convertedEntries = parsedEntries.map((entry: any) => ({
+        ...entry,
+        startTime: new Date(entry.startTime),
+        endTime: entry.endTime ? new Date(entry.endTime) : null
+      }));
+      setTimeEntries(convertedEntries);
     }
     
     if (savedHolidays) {
-      setHolidayEntries(JSON.parse(savedHolidays));
+      const parsedHolidays = JSON.parse(savedHolidays);
+      // Convert string dates back to Date objects for holidays
+      const convertedHolidays = parsedHolidays.map((holiday: any) => ({
+        ...holiday,
+        date: new Date(holiday.date)
+      }));
+      setHolidayEntries(convertedHolidays);
     }
     
     if (savedCurrentEntry) {
@@ -106,7 +135,7 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       // Show both toast and push notification
       toast({
         title: "¡Alerta de descanso!",
-        description: "Según la normativa europea 2024, debes tomar un descanso de 45 minutos tras 4 horas de conducción.",
+        description: "Según la normativa europea 2024, debes tomar un descanso de 45 minutos tras 4.5 horas de conducción.",
         variant: "destructive",
       });
       
@@ -118,10 +147,15 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
     
     // Alert when approaching daily driving limit (80%)
-    if (currentActivity === 'driving' && drivingTimeToday >= EU_REGULATIONS_2024.driving.daily * 0.8) {
+    const drivingLimit = extendedDrivingDays < 2 
+      ? EU_REGULATIONS_2024.driving.extendedDaily 
+      : EU_REGULATIONS_2024.driving.daily;
+      
+    if (currentActivity === 'driving' && drivingTimeToday >= drivingLimit * 0.8) {
+      const limitText = extendedDrivingDays < 2 ? "10 horas" : "9 horas";
       toast({
         title: "Límite de conducción diaria",
-        description: "Te estás acercando al límite de 8 horas de conducción diaria.",
+        description: `Te estás acercando al límite de ${limitText} de conducción diaria.`,
         variant: "default",
       });
     }
@@ -130,16 +164,21 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     if (currentActivity === 'driving' && drivingTimeWeek >= EU_REGULATIONS_2024.driving.weekly * 0.9) {
       toast({
         title: "Límite semanal de conducción",
-        description: "Te estás acercando al límite de 48 horas de conducción semanal.",
+        description: "Te estás acercando al límite de 56 horas de conducción semanal.",
         variant: "default",
       });
     }
     
     // Alert when approaching availability limit
-    if (currentActivity === 'available' && availabilityTimeToday >= EU_REGULATIONS_2024.available.daily * 0.8) {
+    const availabilityLimit = extendedAvailabilityDays < 3 
+      ? EU_REGULATIONS_2024.available.daily 
+      : 12 * 60;
+      
+    if (currentActivity === 'available' && availabilityTimeToday >= availabilityLimit * 0.8) {
+      const limitText = extendedAvailabilityDays < 3 ? "15 horas" : "12 horas";
       toast({
         title: "Límite de disponibilidad",
-        description: "Te estás acercando al límite de 4 horas de disponibilidad diaria.",
+        description: `Te estás acercando al límite de ${limitText} de disponibilidad diaria.`,
         variant: "default",
       });
     }
@@ -153,7 +192,7 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
         variant: "destructive",
       });
     }
-  }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, availabilityTimeToday, additionalTimeToday, currentActivity, toast]);
+  }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, availabilityTimeToday, additionalTimeToday, currentActivity, extendedDrivingDays, extendedAvailabilityDays, toast]);
   
   // Start a new activity
   const startActivity = (type: ActivityType) => {
@@ -164,19 +203,39 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     
     // Check for compliance before starting a new activity
     if (type === 'driving') {
-      if (drivingTimeToday >= EU_REGULATIONS_2024.driving.daily) {
+      const drivingLimit = extendedDrivingDays < 2 
+        ? EU_REGULATIONS_2024.driving.extendedDaily 
+        : EU_REGULATIONS_2024.driving.daily;
+        
+      if (drivingTimeToday >= drivingLimit) {
+        const limitText = extendedDrivingDays < 2 ? "10 horas" : "9 horas";
         sonnerToast.error("¡Límite de conducción superado!", {
-          description: "Has alcanzado el límite de 8 horas diarias de conducción. Debes descansar.",
+          description: `Has alcanzado el límite de ${limitText} diarias de conducción. Debes descansar.`,
           duration: 10000,
         });
         return;
       }
-    } else if (type === 'available' && availabilityTimeToday >= EU_REGULATIONS_2024.available.daily) {
-      sonnerToast.error("¡Límite de disponibilidad superado!", {
-        description: "Has alcanzado el límite de 4 horas diarias de disponibilidad.",
-        duration: 10000,
-      });
-      return;
+      
+      if (drivingTimeWeek >= EU_REGULATIONS_2024.driving.weekly) {
+        sonnerToast.error("¡Límite semanal de conducción superado!", {
+          description: "Has alcanzado el límite de 56 horas semanales de conducción.",
+          duration: 10000,
+        });
+        return;
+      }
+    } else if (type === 'available') {
+      const availabilityLimit = extendedAvailabilityDays < 3 
+        ? EU_REGULATIONS_2024.available.daily 
+        : 12 * 60;
+        
+      if (availabilityTimeToday >= availabilityLimit) {
+        const limitText = extendedAvailabilityDays < 3 ? "15 horas" : "12 horas";
+        sonnerToast.error("¡Límite de disponibilidad superado!", {
+          description: `Has alcanzado el límite de ${limitText} diarias de disponibilidad.`,
+          duration: 10000,
+        });
+        return;
+      }
     }
     
     const newEntry: TimeEntry = {
@@ -213,6 +272,44 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       
       setCurrentActivity(null);
     }
+  };
+  
+  // Add a manual time entry
+  const addManualTimeEntry = (
+    type: ActivityType, 
+    date: Date, 
+    durationMinutes: number, 
+    notes?: string,
+    exceedsLimits: boolean = false
+  ) => {
+    // Create start and end times based on the selected date
+    const startTime = new Date(date);
+    startTime.setHours(8, 0, 0, 0); // Default to 8:00 AM
+    
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + durationMinutes);
+    
+    const newEntry: TimeEntry = {
+      id: Date.now().toString(),
+      type,
+      startTime,
+      endTime,
+      isManualEntry: true,
+      durationMinutes,
+      notes: notes || (exceedsLimits ? '⚠️ Excede límites normativos' : undefined),
+    };
+    
+    setTimeEntries(prev => [...prev, newEntry]);
+  };
+  
+  // Delete a time entry
+  const deleteTimeEntry = (id: string) => {
+    setTimeEntries(prev => prev.filter(entry => entry.id !== id));
+    
+    toast({
+      title: "Registro eliminado",
+      description: "El registro de tiempo ha sido eliminado correctamente.",
+    });
   };
   
   // Add a holiday entry
@@ -284,11 +381,15 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
         drivingTimeWeek,
         drivingTimeBiweek,
         restTimeWeek,
+        extendedDrivingDays,
+        extendedAvailabilityDays,
         startActivity,
         stopActivity,
         addHolidayEntry,
         removeHolidayEntry,
         resetTimeEntries,
+        addManualTimeEntry,
+        deleteTimeEntry,
       }}
     >
       {children}

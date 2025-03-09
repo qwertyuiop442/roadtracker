@@ -19,13 +19,19 @@ interface ComplianceIndicatorProps {
 }
 
 const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorProps) => {
-  const { timeEntries } = useTimeTracking();
+  const { timeEntries, extendedDrivingDays, extendedAvailabilityDays } = useTimeTracking();
   
   // Calculate compliance
   const calculateCompliance = () => {
     const startDate = getStartDateForRange(timeRange);
     const activityTime = getActivityTime(timeEntries, activityType, startDate);
-    const percentage = checkCompliancePercentage(activityTime, activityType, timeRange);
+    const percentage = checkCompliancePercentage(
+      activityTime, 
+      activityType, 
+      timeRange, 
+      extendedDrivingDays, 
+      extendedAvailabilityDays
+    );
     const status = getComplianceStatus(percentage);
     
     return { percentage, status, activityTime };
@@ -33,11 +39,15 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
   
   const { percentage, status, activityTime } = calculateCompliance();
   
-  // Get limits based on activity type and time range
+  // Get limits based on activity type, time range, and extended days
   const getRegulationLimit = () => {
     switch (activityType) {
       case 'driving':
-        if (timeRange === 'day') return EU_REGULATIONS_2024.driving.daily;
+        if (timeRange === 'day') {
+          return extendedDrivingDays < 2 
+            ? EU_REGULATIONS_2024.driving.extendedDaily 
+            : EU_REGULATIONS_2024.driving.daily;
+        }
         if (timeRange === 'week') return EU_REGULATIONS_2024.driving.weekly;
         return EU_REGULATIONS_2024.driving.biweekly;
       case 'rest':
@@ -49,7 +59,13 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
         if (timeRange === 'biweek') return EU_REGULATIONS_2024.additional.biweekly;
         return 480; // Default 8 hours for day
       case 'available':
-        return EU_REGULATIONS_2024.available.daily;
+        if (timeRange === 'day') {
+          return extendedAvailabilityDays < 3
+            ? EU_REGULATIONS_2024.available.daily
+            : 12 * 60; // 12 hours if already used 3 extended days
+        }
+        if (timeRange === 'week') return EU_REGULATIONS_2024.available.weekly;
+        return EU_REGULATIONS_2024.available.daily * 7;
     }
   };
   
@@ -81,6 +97,22 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
     return Math.max(0, limit - activityTime);
   };
   
+  const getLimitText = () => {
+    if (activityType === 'driving' && timeRange === 'day') {
+      return extendedDrivingDays < 2 
+        ? "Límite extendido (2 días/semana)" 
+        : "Límite estándar";
+    }
+    
+    if (activityType === 'available' && timeRange === 'day') {
+      return extendedAvailabilityDays < 3
+        ? "Límite máximo (3 días/semana)"
+        : "Límite estándar";
+    }
+    
+    return "Límite normativo";
+  };
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -102,6 +134,11 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
               <Clock className="h-3 w-3 mr-1 inline" /> 
               Tiempo restante: {formatTime(getRemainingTime())}
             </p>
+            {(activityType === 'driving' || activityType === 'available') && timeRange === 'day' && (
+              <p className="text-xs text-muted-foreground">
+                {getLimitText()}
+              </p>
+            )}
           </div>
         </TooltipContent>
       </Tooltip>
