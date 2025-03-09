@@ -2,10 +2,17 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActivityType, TimeRange, getStartDateForRange, formatTime, SPAIN_REGULATIONS } from "@/lib/timeTracking";
+import { 
+  ActivityType, 
+  TimeRange, 
+  getStartDateForRange, 
+  formatTime, 
+  EU_REGULATIONS_2024 
+} from "@/lib/timeTracking";
 import { useTimeTracking } from "@/context/TimeTrackingContext";
 import ActivityChart from "@/components/ActivityChart";
 import ComplianceIndicator from "@/components/ComplianceIndicator";
+import ExportReport from "@/components/ExportReport";
 import { Truck, Coffee, Clock, Bell, AlertTriangle, Calendar, CalendarDays, CalendarRange } from "lucide-react";
 
 const ActivitySummary = () => {
@@ -54,25 +61,28 @@ const ActivitySummary = () => {
   const getRegulationLimit = (activity: ActivityType, range: TimeRange): number => {
     switch (activity) {
       case 'driving':
-        if (range === 'day') return SPAIN_REGULATIONS.driving.daily;
-        if (range === 'week') return SPAIN_REGULATIONS.driving.weekly;
-        return SPAIN_REGULATIONS.driving.biweekly;
+        if (range === 'day') return EU_REGULATIONS_2024.driving.daily;
+        if (range === 'week') return EU_REGULATIONS_2024.driving.weekly;
+        return EU_REGULATIONS_2024.driving.biweekly;
       case 'rest':
-        if (range === 'day') return SPAIN_REGULATIONS.rest.daily;
-        if (range === 'week') return SPAIN_REGULATIONS.rest.weekly;
-        return SPAIN_REGULATIONS.rest.weekly * 2;
+        if (range === 'day') return EU_REGULATIONS_2024.rest.daily;
+        if (range === 'week') return EU_REGULATIONS_2024.rest.weekly;
+        return EU_REGULATIONS_2024.rest.weekly * 2;
       case 'additional':
-        if (range === 'week') return SPAIN_REGULATIONS.additional.weekly;
-        if (range === 'biweek') return SPAIN_REGULATIONS.additional.biweekly;
+        if (range === 'week') return EU_REGULATIONS_2024.additional.weekly;
+        if (range === 'biweek') return EU_REGULATIONS_2024.additional.biweekly;
         return 480; // Default 8 hours for day
       case 'available':
-        return SPAIN_REGULATIONS.available.daily;
+        return EU_REGULATIONS_2024.available.daily;
     }
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bold text-3xl mb-6">Resumen de Actividades</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="font-bold text-3xl">Resumen de Actividades</h1>
+        <ExportReport className="self-start sm:self-auto" />
+      </div>
       
       {/* Time range selection */}
       <Tabs 
@@ -100,8 +110,11 @@ const ActivitySummary = () => {
       {/* Chart */}
       <Card className="mb-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl">
-            Actividades ({getTimeRangeLabel(timeRange)})
+          <CardTitle className="text-xl flex justify-between items-center">
+            <span>Actividades ({getTimeRangeLabel(timeRange)})</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              Normativa Europea 2024
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -142,7 +155,7 @@ const ActivitySummary = () => {
                   <div className="mt-4 bg-amber-50 rounded-md p-3 text-sm flex items-start">
                     <AlertTriangle className="w-4 h-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
                     <span>
-                      Recuerda que tras 4,5 horas de conducción se debe realizar una pausa de 45 minutos.
+                      Recuerda que tras 4 horas de conducción se debe realizar una pausa de 45 minutos.
                     </span>
                   </div>
                 )}
@@ -150,7 +163,7 @@ const ActivitySummary = () => {
                   <div className="mt-4 bg-amber-50 rounded-md p-3 text-sm flex items-start">
                     <AlertTriangle className="w-4 h-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
                     <span>
-                      El descanso semanal puede reducirse a 24h una semana de cada dos, compensando la diferencia en las siguientes 3 semanas.
+                      El descanso semanal debe ser de 48 horas consecutivas cada 7 días.
                     </span>
                   </div>
                 )}

@@ -8,9 +8,10 @@ import {
   getActivityTime,
   checkCompliancePercentage,
   getComplianceStatus, 
-  formatTime
+  formatTime,
+  EU_REGULATIONS_2024
 } from "@/lib/timeTracking";
-import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, AlertCircle, Clock } from "lucide-react";
 
 interface ComplianceIndicatorProps {
   activityType: ActivityType;
@@ -31,6 +32,28 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
   };
   
   const { percentage, status, activityTime } = calculateCompliance();
+  
+  // Get limits based on activity type and time range
+  const getRegulationLimit = () => {
+    switch (activityType) {
+      case 'driving':
+        if (timeRange === 'day') return EU_REGULATIONS_2024.driving.daily;
+        if (timeRange === 'week') return EU_REGULATIONS_2024.driving.weekly;
+        return EU_REGULATIONS_2024.driving.biweekly;
+      case 'rest':
+        if (timeRange === 'day') return EU_REGULATIONS_2024.rest.daily;
+        if (timeRange === 'week') return EU_REGULATIONS_2024.rest.weekly;
+        return EU_REGULATIONS_2024.rest.weekly * 2;
+      case 'additional':
+        if (timeRange === 'week') return EU_REGULATIONS_2024.additional.weekly;
+        if (timeRange === 'biweek') return EU_REGULATIONS_2024.additional.biweekly;
+        return 480; // Default 8 hours for day
+      case 'available':
+        return EU_REGULATIONS_2024.available.daily;
+    }
+  };
+  
+  const limit = getRegulationLimit();
   
   const getStatusIcon = () => {
     switch (status) {
@@ -54,6 +77,10 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
     }
   };
   
+  const getRemainingTime = () => {
+    return Math.max(0, limit - activityTime);
+  };
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -70,6 +97,10 @@ const ComplianceIndicator = ({ activityType, timeRange }: ComplianceIndicatorPro
             </p>
             <p className="text-sm">
               Tiempo acumulado: {formatTime(activityTime)}
+            </p>
+            <p className="text-sm flex items-center">
+              <Clock className="h-3 w-3 mr-1 inline" /> 
+              Tiempo restante: {formatTime(getRemainingTime())}
             </p>
           </div>
         </TooltipContent>

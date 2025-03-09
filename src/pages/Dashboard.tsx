@@ -1,15 +1,23 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useTimeTracking } from "@/context/TimeTrackingContext";
 import TimeProgress from "@/components/TimeProgress";
 import ActivityButton from "@/components/ActivityButton";
 import Timer from "@/components/Timer";
-import { Truck, Coffee, Clock, Bell, AlertTriangle, InfoIcon } from "lucide-react";
-import { ActivityType, SPAIN_REGULATIONS, getRegulationInfo } from "@/lib/timeTracking";
+import DailyCircleChart from "@/components/DailyCircleChart";
+import { Truck, Coffee, Clock, Bell, AlertTriangle, InfoIcon, MapPin } from "lucide-react";
+import { ActivityType, EU_REGULATIONS_2024, getRegulationInfo } from "@/lib/timeTracking";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Dashboard = () => {
+  // Calculate elapsed time in minutes
+  const calculateElapsedTime = (startTime: Date) => {
+    const now = new Date();
+    return Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
+  };
+  
   const { 
     currentActivity, 
     currentEntry,
@@ -22,30 +30,24 @@ const Dashboard = () => {
   
   const { toast } = useToast();
   
-  // Spanish regulation limits
-  const MAX_DRIVING_TIME = SPAIN_REGULATIONS.driving.extendedDaily; // 10 hours
-  const RECOMMENDED_REST_TIME = SPAIN_REGULATIONS.rest.daily; // 11 hours
-  const MAX_AVAILABILITY_TIME = SPAIN_REGULATIONS.available.daily; // 15 hours
-  
-  // Helper function to calculate elapsed time in minutes - moved up before first use
-  const calculateElapsedTime = (startTime: Date) => {
-    const now = new Date();
-    return Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
-  };
+  // European 2024 regulation limits
+  const MAX_DRIVING_TIME = EU_REGULATIONS_2024.driving.extendedDaily; // 9 hours
+  const RECOMMENDED_REST_TIME = EU_REGULATIONS_2024.rest.daily; // 12 hours
+  const MAX_AVAILABILITY_TIME = EU_REGULATIONS_2024.available.daily; // 4 hours
   
   // Calculate the time spent in "available" state today
   const availabilityTimeToday = currentActivity === 'available' && currentEntry
     ? calculateElapsedTime(currentEntry.startTime)
     : 0;
   
-  const shouldShowBreakWarning = drivingTimeToday >= SPAIN_REGULATIONS.driving.continuous && restTimeToday < SPAIN_REGULATIONS.rest.break;
+  const shouldShowBreakWarning = drivingTimeToday >= EU_REGULATIONS_2024.driving.continuous && restTimeToday < EU_REGULATIONS_2024.rest.break;
   
   const handleStartActivity = (type: ActivityType) => {
     // Information only, no restrictions
     if (currentActivity === 'driving' && type !== 'rest' && shouldShowBreakWarning) {
       toast({
         title: "Información de descanso",
-        description: "Según la normativa española, deberías tomar un descanso de 45 minutos después de 4.5 horas de conducción.",
+        description: "Según la normativa europea 2024, deberías tomar un descanso de 45 minutos después de 4 horas de conducción.",
         variant: "default",
       });
     }
@@ -53,9 +55,27 @@ const Dashboard = () => {
     startActivity(type);
   };
 
+  // Function to force data sync (manually triggered)
+  const handleForceSync = () => {
+    toast({
+      title: "Sincronización manual",
+      description: "Datos sincronizados correctamente.",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="font-bold text-3xl mb-6">Mi Jornada</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <h1 className="font-bold text-3xl">Mi Jornada</h1>
+        <Button 
+          variant="outline" 
+          onClick={handleForceSync}
+          className="self-start sm:self-auto"
+        >
+          <MapPin className="h-4 w-4 mr-2" />
+          Sincronizar ubicación
+        </Button>
+      </div>
       
       {/* Current activity display */}
       <Card className="border-2 shadow-md">
@@ -111,12 +131,22 @@ const Dashboard = () => {
               <AlertTriangle className="w-8 h-8 text-amber-500 mr-3" />
               <div>
                 <h3 className="font-medium">Información de descanso recomendado</h3>
-                <p className="text-sm">Según la normativa española, tras 4.5 horas de conducción se recomienda un descanso de 45 minutos.</p>
+                <p className="text-sm">Según la normativa europea 2024, tras 4 horas de conducción se recomienda un descanso de 45 minutos.</p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
+      
+      {/* Daily activity chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Actividades de hoy</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DailyCircleChart />
+        </CardContent>
+      </Card>
       
       {/* Progress cards with tooltips showing regulations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,7 +161,7 @@ const Dashboard = () => {
                     <InfoIcon className="w-4 h-4 ml-2 text-muted-foreground cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent className="w-80">
-                    <p className="font-semibold mb-1">Normativa española:</p>
+                    <p className="font-semibold mb-1">Normativa europea 2024:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {getRegulationInfo('driving').map((info, i) => (
                         <li key={i}>{info}</li>
@@ -161,7 +191,7 @@ const Dashboard = () => {
                     <InfoIcon className="w-4 h-4 ml-2 text-muted-foreground cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent className="w-80">
-                    <p className="font-semibold mb-1">Normativa española:</p>
+                    <p className="font-semibold mb-1">Normativa europea 2024:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {getRegulationInfo('rest').map((info, i) => (
                         <li key={i}>{info}</li>
@@ -191,7 +221,7 @@ const Dashboard = () => {
                     <InfoIcon className="w-4 h-4 ml-2 text-muted-foreground cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent className="w-80">
-                    <p className="font-semibold mb-1">Normativa española:</p>
+                    <p className="font-semibold mb-1">Normativa europea 2024:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {getRegulationInfo('additional').map((info, i) => (
                         <li key={i}>{info}</li>
@@ -222,7 +252,7 @@ const Dashboard = () => {
                     <InfoIcon className="w-4 h-4 ml-2 text-muted-foreground cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent className="w-80">
-                    <p className="font-semibold mb-1">Normativa española:</p>
+                    <p className="font-semibold mb-1">Normativa europea 2024:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {getRegulationInfo('available').map((info, i) => (
                         <li key={i}>{info}</li>

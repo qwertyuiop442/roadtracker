@@ -4,11 +4,12 @@ import {
   ActivityType, 
   TimeEntry, 
   HolidayEntry, 
-  SPAIN_REGULATIONS,
+  EU_REGULATIONS_2024,
   getStartDateForRange,
   getActivityTime 
 } from '@/lib/timeTracking';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 
 interface TimeTrackingContextType {
   currentActivity: ActivityType | null;
@@ -98,40 +99,84 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     localStorage.setItem('currentActivity', currentActivity ? JSON.stringify(currentActivity) : '');
   }, [currentEntry, currentActivity]);
   
-  // Check if driver should take a break - purely informational, no restrictions
+  // Enhanced alerts for 2024 EU regulations - proactive notifications
   useEffect(() => {
-    if (currentActivity === 'driving' && drivingTimeToday >= SPAIN_REGULATIONS.driving.continuous && restTimeToday < SPAIN_REGULATIONS.rest.break) {
+    // Check if driver should take a break
+    if (currentActivity === 'driving' && drivingTimeToday >= EU_REGULATIONS_2024.driving.continuous && restTimeToday < EU_REGULATIONS_2024.rest.break) {
+      // Show both toast and push notification
       toast({
-        title: "Información de descanso",
-        description: "Según la normativa española, tras 4,5 horas de conducción se recomienda un descanso de 45 minutos.",
+        title: "¡Alerta de descanso!",
+        description: "Según la normativa europea 2024, debes tomar un descanso de 45 minutos tras 4 horas de conducción.",
+        variant: "destructive",
+      });
+      
+      // Sonner toast for more visible notification
+      sonnerToast.error("¡Descanso obligatorio requerido!", {
+        description: "Debes detenerte y tomar un descanso de 45 minutos según la normativa EU 2024.",
+        duration: 10000,
+      });
+    }
+    
+    // Alert when approaching daily driving limit (80%)
+    if (currentActivity === 'driving' && drivingTimeToday >= EU_REGULATIONS_2024.driving.daily * 0.8) {
+      toast({
+        title: "Límite de conducción diaria",
+        description: "Te estás acercando al límite de 8 horas de conducción diaria.",
         variant: "default",
       });
     }
     
     // Alert when approaching weekly driving limit
-    if (currentActivity === 'driving' && drivingTimeWeek >= SPAIN_REGULATIONS.driving.weekly * 0.9) {
+    if (currentActivity === 'driving' && drivingTimeWeek >= EU_REGULATIONS_2024.driving.weekly * 0.9) {
       toast({
         title: "Límite semanal de conducción",
-        description: "Te estás acercando al límite de 56 horas de conducción semanal.",
+        description: "Te estás acercando al límite de 48 horas de conducción semanal.",
         variant: "default",
       });
     }
     
-    // Alert when approaching biweekly driving limit
-    if (currentActivity === 'driving' && drivingTimeBiweek >= SPAIN_REGULATIONS.driving.biweekly * 0.9) {
+    // Alert when approaching availability limit
+    if (currentActivity === 'available' && availabilityTimeToday >= EU_REGULATIONS_2024.available.daily * 0.8) {
       toast({
-        title: "Límite bisemanal de conducción",
-        description: "Te estás acercando al límite de 90 horas de conducción en dos semanas.",
+        title: "Límite de disponibilidad",
+        description: "Te estás acercando al límite de 4 horas de disponibilidad diaria.",
         variant: "default",
       });
     }
-  }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, currentActivity, toast]);
+    
+    // Alert for insufficient rest
+    const totalActiveTime = drivingTimeToday + additionalTimeToday + availabilityTimeToday;
+    if (totalActiveTime > 12 * 60 && restTimeToday < 8 * 60) {
+      toast({
+        title: "Descanso insuficiente",
+        description: "No has tomado suficiente descanso hoy según la normativa europea 2024.",
+        variant: "destructive",
+      });
+    }
+  }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, availabilityTimeToday, additionalTimeToday, currentActivity, toast]);
   
   // Start a new activity
   const startActivity = (type: ActivityType) => {
     // If there's an ongoing activity, stop it first
     if (currentEntry) {
       stopActivity();
+    }
+    
+    // Check for compliance before starting a new activity
+    if (type === 'driving') {
+      if (drivingTimeToday >= EU_REGULATIONS_2024.driving.daily) {
+        sonnerToast.error("¡Límite de conducción superado!", {
+          description: "Has alcanzado el límite de 8 horas diarias de conducción. Debes descansar.",
+          duration: 10000,
+        });
+        return;
+      }
+    } else if (type === 'available' && availabilityTimeToday >= EU_REGULATIONS_2024.available.daily) {
+      sonnerToast.error("¡Límite de disponibilidad superado!", {
+        description: "Has alcanzado el límite de 4 horas diarias de disponibilidad.",
+        duration: 10000,
+      });
+      return;
     }
     
     const newEntry: TimeEntry = {

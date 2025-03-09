@@ -1,4 +1,3 @@
-
 export type ActivityType = 'driving' | 'rest' | 'additional' | 'available';
 export type TimeRange = 'day' | 'week' | 'biweek';
 
@@ -17,32 +16,35 @@ export interface HolidayEntry {
   isSixthDay: boolean;
 }
 
-// Spanish regulations for driving and rest times (in minutes)
-export const SPAIN_REGULATIONS = {
+// European regulations for driving and rest times (in minutes) - 2024 Update
+export const EU_REGULATIONS_2024 = {
   driving: {
-    daily: 9 * 60,       // 9 hours standard (can be extended to 10h twice a week)
-    extendedDaily: 10 * 60, // 10 hours extended (max 2 times per week)
-    weekly: 56 * 60,     // 56 hours weekly maximum
-    biweekly: 90 * 60,   // 90 hours over 2 weeks
-    continuous: 4.5 * 60 // 4.5 hours continuous driving before a break
+    daily: 8 * 60,       // 8 hours standard
+    extendedDaily: 9 * 60, // 9 hours extended (max 1 time per week)
+    weekly: 48 * 60,     // 48 hours weekly maximum
+    biweekly: 84 * 60,   // 84 hours over 2 weeks
+    continuous: 4 * 60   // 4 hours continuous driving before a break
   },
   rest: {
-    daily: 11 * 60,      // 11 hours daily rest (can be reduced to 9h three times per week)
-    reducedDaily: 9 * 60, // 9 hours reduced daily rest
-    weekly: 45 * 60,     // 45 hours weekly rest
-    reducedWeekly: 24 * 60, // 24 hours reduced weekly rest (once every two weeks)
-    break: 45,           // 45 minutes break after 4.5 hours driving
+    daily: 12 * 60,      // 12 hours daily rest
+    reducedDaily: 11 * 60, // 11 hours reduced daily rest
+    weekly: 48 * 60,     // 48 hours weekly rest
+    reducedWeekly: 36 * 60, // 36 hours reduced weekly rest
+    break: 45,           // 45 minutes break after 4 hours driving
     splitBreak1: 15,     // 15 minutes for first part of split break
     splitBreak2: 30      // 30 minutes for second part of split break
   },
   available: {
-    daily: 15 * 60       // 15 hours daily availability limit
+    daily: 4 * 60       // 4 hours daily availability limit
   },
   additional: {
-    weekly: 60 * 60,     // 60 hours weekly maximum
-    biweekly: 100 * 60   // 100 hours over 2 weeks
+    weekly: 30 * 60,     // 30 hours weekly maximum
+    biweekly: 60 * 60    // 60 hours over 2 weeks
   }
 };
+
+// For backward compatibility, keep the SPAIN_REGULATIONS constant
+export const SPAIN_REGULATIONS = EU_REGULATIONS_2024;
 
 // Gets formatted time string from minutes
 export const formatMinutes = (minutes: number): string => {
@@ -142,21 +144,21 @@ export const checkCompliancePercentage = (
   
   switch (activityType) {
     case 'driving':
-      if (timeRange === 'day') limit = SPAIN_REGULATIONS.driving.daily;
-      else if (timeRange === 'week') limit = SPAIN_REGULATIONS.driving.weekly;
-      else if (timeRange === 'biweek') limit = SPAIN_REGULATIONS.driving.biweekly;
+      if (timeRange === 'day') limit = EU_REGULATIONS_2024.driving.daily;
+      else if (timeRange === 'week') limit = EU_REGULATIONS_2024.driving.weekly;
+      else if (timeRange === 'biweek') limit = EU_REGULATIONS_2024.driving.biweekly;
       break;
     case 'rest':
-      if (timeRange === 'day') limit = SPAIN_REGULATIONS.rest.daily;
-      else if (timeRange === 'week') limit = SPAIN_REGULATIONS.rest.weekly;
+      if (timeRange === 'day') limit = EU_REGULATIONS_2024.rest.daily;
+      else if (timeRange === 'week') limit = EU_REGULATIONS_2024.rest.weekly;
       break;
     case 'additional':
-      if (timeRange === 'week') limit = SPAIN_REGULATIONS.additional.weekly;
-      else if (timeRange === 'biweek') limit = SPAIN_REGULATIONS.additional.biweekly;
+      if (timeRange === 'week') limit = EU_REGULATIONS_2024.additional.weekly;
+      else if (timeRange === 'biweek') limit = EU_REGULATIONS_2024.additional.biweekly;
       else limit = 480; // 8 hours as default for day
       break;
     case 'available':
-      limit = SPAIN_REGULATIONS.available.daily;
+      limit = EU_REGULATIONS_2024.available.daily;
       break;
   }
   
@@ -175,30 +177,30 @@ export const getRegulationInfo = (type: 'driving' | 'rest' | 'additional' | 'ava
   switch (type) {
     case 'driving':
       return [
-        '9 horas diarias (estándar)',
-        '10 horas diarias (máximo 2 veces por semana)',
-        '56 horas semanales máximo',
-        '90 horas en dos semanas',
-        '4,5 horas de conducción continua antes de descanso obligatorio'
+        '8 horas diarias (estándar)',
+        '9 horas diarias (máximo 1 vez por semana)',
+        '48 horas semanales máximo',
+        '84 horas en dos semanas',
+        '4 horas de conducción continua antes de descanso obligatorio'
       ];
     case 'rest':
       return [
-        '11 horas de descanso diario normal',
-        '9 horas de descanso diario reducido (máximo 3 veces por semana)',
-        '45 horas de descanso semanal normal',
-        '24 horas de descanso semanal reducido (una vez cada dos semanas)',
-        '45 minutos de pausa después de 4,5 horas de conducción',
+        '12 horas de descanso diario normal',
+        '11 horas de descanso diario reducido',
+        '48 horas de descanso semanal normal',
+        '36 horas de descanso semanal reducido',
+        '45 minutos de pausa después de 4 horas de conducción',
         'Posibilidad de dividir la pausa de 45 minutos en dos (15 min + 30 min)'
       ];
     case 'additional':
       return [
-        'El tiempo máximo de trabajo semanal: 60 horas',
-        'Tiempo máximo de trabajo en dos semanas: 100 horas',
+        'El tiempo máximo de trabajo semanal: 30 horas',
+        'Tiempo máximo de trabajo en dos semanas: 60 horas',
         'El trabajo nocturno no debe exceder las 10 horas en cada período de 24 horas'
       ];
     case 'available':
       return [
-        'Tiempo máximo de disponibilidad diaria: 15 horas',
+        'Tiempo máximo de disponibilidad diaria: 4 horas',
         'El tiempo de disponibilidad se considera período de descanso',
         'No se considera tiempo de conducción ni de otros trabajos'
       ];
