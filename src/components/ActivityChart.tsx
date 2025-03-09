@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Cell } from "recharts";
 import { useTimeTracking } from "@/context/TimeTrackingContext";
 import { 
   ActivityType, 
@@ -279,6 +278,57 @@ const ActivityChart = ({ timeRange }: ActivityChartProps) => {
   
   const referenceLines = getReferenceLines();
   
+  // Generate custom cells for each bar to handle conditional styling
+  const getDrivingBarCells = () => {
+    return chartData.map((entry, index) => {
+      let opacity = hoveredBar && hoveredBar !== 'driving' ? 0.5 : 1;
+      
+      if (entry.isNonCompliant && entry.driving > EU_REGULATIONS_2024.driving.extendedDaily) {
+        opacity = 0.5; // Lower opacity for exceeding limits
+      } else if (entry.hasExtendedDriving) {
+        opacity = 0.8; // Slightly lower opacity for extended days
+      }
+      
+      const stroke = entry.hasExtendedDriving ? '#ef4444' : undefined;
+      const strokeWidth = entry.hasExtendedDriving ? 1 : 0;
+      
+      return (
+        <Cell 
+          key={`driving-cell-${index}`}
+          fill="#1e40af"
+          fillOpacity={opacity}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+    });
+  };
+  
+  const getAvailabilityBarCells = () => {
+    return chartData.map((entry, index) => {
+      let opacity = hoveredBar && hoveredBar !== 'available' ? 0.5 : 1;
+      
+      if (entry.isNonCompliant && entry.available > EU_REGULATIONS_2024.available.daily) {
+        opacity = 0.5; // Lower opacity for exceeding limits
+      } else if (entry.hasExtendedAvailability) {
+        opacity = 0.8; // Slightly lower opacity for extended days
+      }
+      
+      const stroke = entry.hasExtendedAvailability ? '#ef4444' : undefined;
+      const strokeWidth = entry.hasExtendedAvailability ? 1 : 0;
+      
+      return (
+        <Cell 
+          key={`available-cell-${index}`}
+          fill="#9333ea"
+          fillOpacity={opacity}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
+      );
+    });
+  };
+  
   return (
     <div className="w-full h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -335,24 +385,12 @@ const ActivityChart = ({ timeRange }: ActivityChartProps) => {
           <Bar 
             dataKey="driving" 
             name="Conducción" 
-            fill="#1e40af"
+            fill="#1e40af"  // This will be overridden by Cell components
             onMouseOver={() => setHoveredBar('driving')}
             onMouseOut={() => setHoveredBar(null)}
-            opacity={hoveredBar && hoveredBar !== 'driving' ? 0.5 : 1}
-            // Highlight bars that exceed limits or use extended hours
-            fillOpacity={(entry) => {
-              if (entry.isNonCompliant && entry.driving > EU_REGULATIONS_2024.driving.extendedDaily) {
-                return 0.5; // Lower opacity for exceeding limits
-              }
-              if (entry.hasExtendedDriving) {
-                return 0.8; // Slightly lower opacity for extended days
-              }
-              return 1;
-            }}
-            // Add stripes for extended days
-            stroke={(entry) => entry.hasExtendedDriving ? '#ef4444' : undefined}
-            strokeWidth={(entry) => entry.hasExtendedDriving ? 1 : 0}
-          />
+          >
+            {getDrivingBarCells()}
+          </Bar>
           <Bar 
             dataKey="rest" 
             name="Descanso" 
@@ -372,24 +410,12 @@ const ActivityChart = ({ timeRange }: ActivityChartProps) => {
           <Bar 
             dataKey="available" 
             name="Disponibilidad" 
-            fill="#9333ea"
+            fill="#9333ea"  // This will be overridden by Cell components
             onMouseOver={() => setHoveredBar('available')}
             onMouseOut={() => setHoveredBar(null)}
-            opacity={hoveredBar && hoveredBar !== 'available' ? 0.5 : 1}
-            // Highlight bars that exceed limits or use extended hours
-            fillOpacity={(entry) => {
-              if (entry.isNonCompliant && entry.available > EU_REGULATIONS_2024.available.daily) {
-                return 0.5; // Lower opacity for exceeding limits
-              }
-              if (entry.hasExtendedAvailability) {
-                return 0.8; // Slightly lower opacity for extended days
-              }
-              return 1;
-            }}
-            // Add stripes for extended days
-            stroke={(entry) => entry.hasExtendedAvailability ? '#ef4444' : undefined}
-            strokeWidth={(entry) => entry.hasExtendedAvailability ? 1 : 0}
-          />
+          >
+            {getAvailabilityBarCells()}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
