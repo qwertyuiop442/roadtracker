@@ -23,6 +23,11 @@ const config: CapacitorConfig = {
     LocalNotifications: {
       smallIcon: "ic_stat_truck",
       iconColor: "#1e40af"
+    },
+    Keyboard: {
+      resize: true,
+      style: "dark",
+      resizeOnFullScreen: true
     }
   },
   android: {
@@ -34,6 +39,10 @@ const config: CapacitorConfig = {
       versionCode: 1,
       versionName: "1.0.0"
     }
+  },
+  ios: {
+    contentInset: "always",
+    allowsLinkPreview: false
   }
 };
 

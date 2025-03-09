@@ -1,8 +1,16 @@
+
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   text-align: center;
+}
+
+/* Fix for mobile viewing */
+@media (max-width: 768px) {
+  #root {
+    padding: env(safe-area-inset-top) 1rem calc(env(safe-area-inset-bottom) + 70px) 1rem;
+  }
 }
 
 .logo {
@@ -39,4 +47,28 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Prevent text from being too small on mobile devices */
+@media (max-width: 375px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Ensure that inputs and form elements are usable on mobile */
+@media (max-width: 640px) {
+  input, select, textarea, button {
+    min-height: 44px; /* Apple's recommended minimum tap target size */
+  }
+}
+
+/* Fix for iOS text size adjustment */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Make sure scrolling is smooth */
+* {
+  -webkit-overflow-scrolling: touch;
 }

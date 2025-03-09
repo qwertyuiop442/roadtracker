@@ -15,13 +15,13 @@ const ActivityButton = ({ type, onClick, active, className }: ActivityButtonProp
   const getIcon = () => {
     switch (type) {
       case 'driving':
-        return <Truck className="mr-2 h-5 w-5" />;
+        return <Truck className="mr-1 h-5 w-5 flex-shrink-0" />;
       case 'rest':
-        return <Coffee className="mr-2 h-5 w-5" />;
+        return <Coffee className="mr-1 h-5 w-5 flex-shrink-0" />;
       case 'additional':
-        return <Clock className="mr-2 h-5 w-5" />;
+        return <Clock className="mr-1 h-5 w-5 flex-shrink-0" />;
       case 'available':
-        return <Bell className="mr-2 h-5 w-5" />;
+        return <Bell className="mr-1 h-5 w-5 flex-shrink-0" />;
     }
   };
   
@@ -59,13 +59,15 @@ const ActivityButton = ({ type, onClick, active, className }: ActivityButtonProp
       size="lg"
       onClick={onClick}
       className={cn(
-        "h-16 text-lg rounded-xl shadow-sm", 
+        "h-16 text-sm sm:text-base md:text-lg rounded-xl shadow-sm flex items-center justify-center w-full", 
         getColorClass(),
         className
       )}
     >
-      {getIcon()}
-      {getLabel()}
+      <div className="flex items-center justify-center min-w-0">
+        {getIcon()}
+        <span className="truncate">{getLabel()}</span>
+      </div>
     </Button>
   );
 };

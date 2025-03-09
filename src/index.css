@@ -100,23 +100,72 @@
   }
   
   h1 {
-    @apply text-3xl md:text-4xl;
+    @apply text-2xl sm:text-3xl md:text-4xl;
   }
   
   h2 {
-    @apply text-2xl md:text-3xl;
+    @apply text-xl sm:text-2xl md:text-3xl;
   }
   
   h3 {
-    @apply text-xl md:text-2xl;
+    @apply text-lg sm:text-xl md:text-2xl;
   }
   
   .timer-display {
-    @apply text-4xl md:text-5xl font-bold;
+    @apply text-3xl sm:text-4xl md:text-5xl font-bold;
   }
   
   .btn-large {
-    @apply text-lg p-4 rounded-full w-full md:w-auto font-medium;
+    @apply text-base sm:text-lg p-3 sm:p-4 rounded-full w-full md:w-auto font-medium;
   }
 }
 
+/* Safe area utilities for mobile devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .py-safe {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Responsive padding for main content when using bottom navigation */
+.has-bottom-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Fix for input zoom on mobile devices */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Truncate text with ellipsis for buttons and other UI elements */
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Ensure SVG icons scale properly */
+svg {
+  max-width: 100%;
+  height: auto;
+}
