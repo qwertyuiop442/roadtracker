@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.5e468c28fc1846f384b92941af3b0b6b',
+  appId: 'app.lovable.roadtrackerpro',
   appName: 'RoadTracker Pro 2024',
   webDir: 'dist',
   server: {
@@ -13,7 +13,9 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: false,
       backgroundColor: "#1e40af",
-      spinnerColor: "#ffffff"
+      spinnerColor: "#ffffff",
+      showSpinner: true,
+      androidScaleType: "CENTER_CROP"
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
@@ -21,6 +23,16 @@ const config: CapacitorConfig = {
     LocalNotifications: {
       smallIcon: "ic_stat_truck",
       iconColor: "#1e40af"
+    }
+  },
+  android: {
+    buildOptions: {
+      keystorePath: "roadtracker.keystore",
+      keystoreAlias: "roadtracker",
+      minSdkVersion: 29, // Android 10
+      targetSdkVersion: 33,
+      versionCode: 1,
+      versionName: "1.0.0"
     }
   }
 };
