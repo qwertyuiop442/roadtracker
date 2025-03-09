@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { useTimeTracking } from "@/context/TimeTrackingContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Moon, Sun } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTheme } from "@/context/ThemeContext";
 
 const Settings = () => {
   const { resetTimeEntries } = useTimeTracking();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [autoBreak, setAutoBreak] = useState(true);
@@ -40,6 +42,32 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <h1 className="font-bold text-3xl mb-6">Configuración</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Apariencia</CardTitle>
+          <CardDescription>Configura el tema de la aplicación</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="theme-switch">Modo oscuro</Label>
+              <p className="text-sm text-muted-foreground">
+                Cambiar entre tema claro y oscuro
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Sun className="h-5 w-5 text-yellow-500" />
+              <Switch
+                id="theme-switch"
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+              />
+              <Moon className="h-5 w-5 text-blue-800 dark:text-blue-400" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>

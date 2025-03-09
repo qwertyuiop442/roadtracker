@@ -72,3 +72,34 @@ html {
 * {
   -webkit-overflow-scrolling: touch;
 }
+
+/* Dark mode transition */
+body, 
+#root, 
+header, 
+footer, 
+main, 
+.card,
+button,
+a {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(222.2 84% 10%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(217.2 32.6% 25%);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(217.2 32.6% 35%);
+}
