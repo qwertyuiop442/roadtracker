@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   ActivityType, 
@@ -51,27 +50,22 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [holidayEntries, setHolidayEntries] = useState<HolidayEntry[]>([]);
   
-  // Get date ranges
   const today = getStartDateForRange('day');
   const weekStart = getStartDateForRange('week');
   const biweekStart = getStartDateForRange('biweek');
   
-  // Calculate metrics for today
   const drivingTimeToday = getActivityTime(timeEntries, 'driving', today);
   const restTimeToday = getActivityTime(timeEntries, 'rest', today);
   const additionalTimeToday = getActivityTime(timeEntries, 'additional', today);
   const availabilityTimeToday = getActivityTime(timeEntries, 'available', today);
   
-  // Calculate weekly and biweekly metrics
   const drivingTimeWeek = getActivityTime(timeEntries, 'driving', weekStart);
   const drivingTimeBiweek = getActivityTime(timeEntries, 'driving', biweekStart);
   const restTimeWeek = getActivityTime(timeEntries, 'rest', weekStart);
   
-  // Calculate extended days count
   const extendedDrivingDays = countExtendedDrivingDays(timeEntries);
   const extendedAvailabilityDays = countExtendedAvailabilityDays(timeEntries);
   
-  // Load data from localStorage on initial load
   useEffect(() => {
     const savedEntries = localStorage.getItem('timeEntries');
     const savedHolidays = localStorage.getItem('holidayEntries');
@@ -80,7 +74,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     
     if (savedEntries) {
       const parsedEntries = JSON.parse(savedEntries);
-      // Convert string dates back to Date objects for loaded entries
       const convertedEntries = parsedEntries.map((entry: any) => ({
         ...entry,
         startTime: new Date(entry.startTime),
@@ -91,7 +84,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     
     if (savedHolidays) {
       const parsedHolidays = JSON.parse(savedHolidays);
-      // Convert string dates back to Date objects for holidays
       const convertedHolidays = parsedHolidays.map((holiday: any) => ({
         ...holiday,
         date: new Date(holiday.date)
@@ -101,7 +93,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     
     if (savedCurrentEntry) {
       const parsedEntry = JSON.parse(savedCurrentEntry);
-      // Convert string dates back to Date objects
       parsedEntry.startTime = new Date(parsedEntry.startTime);
       if (parsedEntry.endTime) {
         parsedEntry.endTime = new Date(parsedEntry.endTime);
@@ -114,7 +105,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   }, []);
   
-  // Save to localStorage when state changes
   useEffect(() => {
     localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
   }, [timeEntries]);
@@ -128,25 +118,20 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     localStorage.setItem('currentActivity', currentActivity ? JSON.stringify(currentActivity) : '');
   }, [currentEntry, currentActivity]);
   
-  // Enhanced alerts for 2024 EU regulations - proactive notifications
   useEffect(() => {
-    // Check if driver should take a break
     if (currentActivity === 'driving' && drivingTimeToday >= EU_REGULATIONS_2024.driving.continuous && restTimeToday < EU_REGULATIONS_2024.rest.break) {
-      // Show both toast and push notification
       toast({
         title: "¡Alerta de descanso!",
         description: "Según la normativa europea 2024, debes tomar un descanso de 45 minutos tras 4.5 horas de conducción.",
         variant: "destructive",
       });
       
-      // Sonner toast for more visible notification
       sonnerToast.error("¡Descanso obligatorio requerido!", {
         description: "Debes detenerte y tomar un descanso de 45 minutos según la normativa EU 2024.",
         duration: 10000,
       });
     }
     
-    // Alert when approaching daily driving limit (80%)
     const drivingLimit = extendedDrivingDays < 2 
       ? EU_REGULATIONS_2024.driving.extendedDaily 
       : EU_REGULATIONS_2024.driving.daily;
@@ -160,7 +145,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       });
     }
     
-    // Alert when approaching weekly driving limit
     if (currentActivity === 'driving' && drivingTimeWeek >= EU_REGULATIONS_2024.driving.weekly * 0.9) {
       toast({
         title: "Límite semanal de conducción",
@@ -169,7 +153,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       });
     }
     
-    // Alert when approaching availability limit
     const availabilityLimit = extendedAvailabilityDays < 3 
       ? EU_REGULATIONS_2024.available.daily 
       : 12 * 60;
@@ -183,7 +166,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
       });
     }
     
-    // Alert for insufficient rest
     const totalActiveTime = drivingTimeToday + additionalTimeToday + availabilityTimeToday;
     if (totalActiveTime > 12 * 60 && restTimeToday < 8 * 60) {
       toast({
@@ -194,14 +176,11 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   }, [drivingTimeToday, restTimeToday, drivingTimeWeek, drivingTimeBiweek, availabilityTimeToday, additionalTimeToday, currentActivity, extendedDrivingDays, extendedAvailabilityDays, toast]);
   
-  // Start a new activity
   const startActivity = (type: ActivityType) => {
-    // If there's an ongoing activity, stop it first
     if (currentEntry) {
       stopActivity();
     }
     
-    // Check for compliance before starting a new activity
     if (type === 'driving') {
       const drivingLimit = extendedDrivingDays < 2 
         ? EU_REGULATIONS_2024.driving.extendedDaily 
@@ -254,7 +233,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     });
   };
   
-  // Stop the current activity
   const stopActivity = () => {
     if (currentEntry) {
       const completedEntry: TimeEntry = {
@@ -274,7 +252,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   };
   
-  // Add a manual time entry
   const addManualTimeEntry = (
     type: ActivityType, 
     date: Date, 
@@ -282,9 +259,8 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     notes?: string,
     exceedsLimits: boolean = false
   ) => {
-    // Create start and end times based on the selected date
     const startTime = new Date(date);
-    startTime.setHours(8, 0, 0, 0); // Default to 8:00 AM
+    startTime.setHours(8, 0, 0, 0);
     
     const endTime = new Date(startTime);
     endTime.setMinutes(endTime.getMinutes() + durationMinutes);
@@ -302,7 +278,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     setTimeEntries(prev => [...prev, newEntry]);
   };
   
-  // Delete a time entry
   const deleteTimeEntry = (id: string) => {
     setTimeEntries(prev => prev.filter(entry => entry.id !== id));
     
@@ -312,7 +287,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     });
   };
   
-  // Add a holiday entry
   const addHolidayEntry = (entry: Omit<HolidayEntry, 'id'>) => {
     const newEntry: HolidayEntry = {
       ...entry,
@@ -327,7 +301,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     });
   };
   
-  // Remove a holiday entry
   const removeHolidayEntry = (id: string) => {
     setHolidayEntries(prev => prev.filter(entry => entry.id !== id));
     
@@ -337,7 +310,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     });
   };
   
-  // Reset all time entries (for testing)
   const resetTimeEntries = () => {
     if (currentEntry) {
       stopActivity();
@@ -353,7 +325,6 @@ export const TimeTrackingProvider: React.FC<{children: React.ReactNode}> = ({ ch
     });
   };
   
-  // Helper function to get activity name in Spanish
   function getActivityName(type: ActivityType): string {
     switch (type) {
       case 'driving':

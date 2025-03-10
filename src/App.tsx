@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,9 +13,10 @@ import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./context/ThemeContext";
 import SplashScreen from "./components/SplashScreen";
+import OfflineIndicator from "./components/OfflineIndicator";
 import { useEffect, useState } from "react";
 
-// Configure QueryClient to work offline
+// Configure QueryClient to work completely offline
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,7 +24,8 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
-      staleTime: Infinity
+      staleTime: Infinity,
+      networkMode: 'always'
     },
   },
 });
@@ -55,6 +58,7 @@ const App = () => {
             {showSplash && <SplashScreen />}
             <Toaster />
             <Sonner />
+            <OfflineIndicator />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Layout />}>
