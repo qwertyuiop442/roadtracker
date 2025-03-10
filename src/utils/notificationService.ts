@@ -31,7 +31,7 @@ export const sendNotification = (title: string, options: NotificationOptions = {
   const notificationOptions: NotificationOptions = {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    vibrate: [200, 100, 200],
+    // Remove the vibrate property as it's not part of NotificationOptions
     ...options,
   };
 

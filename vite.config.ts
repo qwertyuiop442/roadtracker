@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'offline.html', 'bubblewrap-guide.md'],
-      manifest: true, // Now using the manifest from public/manifest.json
+      manifest: false, // Changed from true to false to use the one from public/manifest.json
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,webp}'],
         runtimeCaching: [
