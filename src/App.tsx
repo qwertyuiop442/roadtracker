@@ -12,6 +12,8 @@ import ActivitySummary from "./pages/ActivitySummary";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./context/ThemeContext";
+import SplashScreen from "./components/SplashScreen";
+import { useEffect, useState } from "react";
 
 // Configure QueryClient to work offline
 const queryClient = new QueryClient({
@@ -26,27 +28,49 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="tracker" element={<TimeTracker />} />
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="activity-summary" element={<ActivitySummary />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Only show splash screen on first load or when installed
+    const hasVisited = sessionStorage.getItem('hasVisited');
+    if (hasVisited) {
+      setShowSplash(false);
+    } else {
+      sessionStorage.setItem('hasVisited', 'true');
+      
+      // Hide splash after animation completes
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2500); // Slightly longer than the animation
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          {showSplash && <SplashScreen />}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="tracker" element={<TimeTracker />} />
+                <Route path="calendar" element={<Calendar />} />
+                <Route path="activity-summary" element={<ActivitySummary />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

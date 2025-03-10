@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download } from "lucide-react";
+import { Download, X } from "lucide-react";
+import { toast } from "sonner";
 
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -33,6 +34,9 @@ const PWAInstallPrompt = () => {
     window.addEventListener('appinstalled', () => {
       setIsAppInstalled(true);
       setShowPrompt(false);
+      toast.success("¡Aplicación instalada correctamente!", {
+        description: "RoadTracker Pro está listo para usar sin conexión"
+      });
       console.log('PWA was installed');
     });
 
@@ -51,6 +55,10 @@ const PWAInstallPrompt = () => {
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User ${outcome} the installation`);
     
+    if (outcome === 'accepted') {
+      toast.success("Instalando aplicación...");
+    }
+    
     // We've used the prompt, so it can't be used again
     setDeferredPrompt(null);
     setShowPrompt(false);
@@ -58,14 +66,27 @@ const PWAInstallPrompt = () => {
 
   const dismissPrompt = () => {
     setShowPrompt(false);
+    // Remember user's choice not to install for this session
+    localStorage.setItem('pwaPromptDismissed', Date.now().toString());
   };
 
   if (!showPrompt || isAppInstalled) return null;
 
+  // Check if user recently dismissed the prompt (in the last 24 hours)
+  const lastDismissed = localStorage.getItem('pwaPromptDismissed');
+  if (lastDismissed && Date.now() - parseInt(lastDismissed) < 24 * 60 * 60 * 1000) {
+    return null;
+  }
+
   return (
-    <Card className="fixed bottom-20 left-4 right-4 p-4 z-50 bg-white dark:bg-gray-800 shadow-lg">
+    <Card className="fixed bottom-20 left-4 right-4 p-4 z-50 bg-white dark:bg-gray-800 shadow-lg animate-fade-in">
       <div className="flex flex-col space-y-3">
-        <p className="text-sm">Instala RoadTracker Pro para una mejor experiencia sin conexión</p>
+        <div className="flex justify-between items-start">
+          <p className="text-sm font-medium">Instala RoadTracker Pro para una mejor experiencia sin conexión</p>
+          <Button variant="ghost" size="icon" onClick={dismissPrompt} className="h-6 w-6">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         <div className="flex space-x-2 justify-end">
           <Button variant="outline" size="sm" onClick={dismissPrompt}>
             Ahora no

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1e40af" />
+    <meta name="theme-color" content="#FFA07A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="RoadTracker Pro" />
@@ -12,6 +12,10 @@
     <meta name="description" content="Aplicación para el seguimiento de tiempos de conducción y descanso" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="RoadTracker Pro" />
+    <meta name="msapplication-TileColor" content="#FFA07A" />
+    <meta name="msapplication-tap-highlight" content="no" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -33,6 +37,27 @@
     
     <!-- favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png" />
+    
+    <!-- Preconnect to important origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Prevent tap highlight on mobile -->
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* PWA iOS status bar fix */
+      @supports (padding-top: env(safe-area-inset-top)) {
+        body {
+          --safe-area-inset-top: env(safe-area-inset-top);
+          --safe-area-inset-right: env(safe-area-inset-right);
+          --safe-area-inset-bottom: env(safe-area-inset-bottom);
+          --safe-area-inset-left: env(safe-area-inset-left);
+        }
+      }
+    </style>
   </head>
 
   <body>

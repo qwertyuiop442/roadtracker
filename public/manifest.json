@@ -5,50 +5,78 @@
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#f0f9ff",
-  "theme_color": "#1e40af",
+  "theme_color": "#FFA07A",
   "description": "Aplicación para el seguimiento de tiempos de conducción y descanso",
   "orientation": "portrait-primary",
+  "lang": "es",
+  "dir": "ltr",
+  "scope": "/",
+  "categories": ["transportation", "productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/screen1.webp",
+      "sizes": "1080x1920",
+      "type": "image/webp",
+      "platform": "narrow",
+      "label": "Pantalla principal de RoadTracker Pro"
+    },
+    {
+      "src": "/screenshots/screen2.webp",
+      "sizes": "1080x1920",
+      "type": "image/webp",
+      "platform": "narrow",
+      "label": "Función de seguimiento de tiempo"
     }
   ],
   "shortcuts": [
@@ -66,5 +94,21 @@
       "url": "/calendar",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/tracker",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "capture_links": "existing-client-navigate",
+  "related_applications": [],
+  "launch_handler": {
+    "route_to": "existing-client",
+    "navigate_existing_client": "always"
+  }
 }

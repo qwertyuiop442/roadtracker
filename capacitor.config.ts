@@ -8,18 +8,19 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     allowNavigation: ['*'],
+    cleartext: true
   },
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
-      backgroundColor: "#1e40af",
+      backgroundColor: "#FFA07A",
       spinnerColor: "#ffffff",
       showSpinner: true,
       androidScaleType: "CENTER_CROP"
     },
     LocalNotifications: {
       smallIcon: "ic_stat_truck",
-      iconColor: "#1e40af"
+      iconColor: "#FFA07A"
     },
     Keyboard: {
       resize: true,
@@ -29,6 +30,10 @@ const config: CapacitorConfig = {
     // Add PWAConfig for Capacitor PWA Elements
     PWA: {
       enabled: true
+    },
+    // Add Push Notifications config
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   },
   android: {
@@ -39,11 +44,36 @@ const config: CapacitorConfig = {
       targetSdkVersion: 33,
       versionCode: 1,
       versionName: "1.0.0"
-    }
+    },
+    // Android specific configurations for TWA (Trusted Web Activities)
+    intentFilters: [
+      {
+        action: "android.intent.action.VIEW",
+        category: ["android.intent.category.DEFAULT", "android.intent.category.BROWSABLE"],
+        data: {
+          scheme: "https",
+          host: "*.roadtrackerpro.com"
+        }
+      }
+    ],
+    permissions: [
+      "android.permission.CAMERA",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.WAKE_LOCK",
+      "android.permission.VIBRATE"
+    ]
   },
   ios: {
     contentInset: "always",
-    allowsLinkPreview: false
+    allowsLinkPreview: false,
+    backgroundColor: "#FFA07A",
+    preferredContentMode: "mobile",
+    // Permission strings
+    permissions: {
+      camera: "Esta aplicación necesita acceso a la cámara para capturar fotos",
+      location: "Esta aplicación necesita acceso a tu ubicación para registrar tus actividades"
+    }
   }
 };
 
