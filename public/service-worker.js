@@ -1,7 +1,6 @@
-
 // Cache names
-const CACHE_NAME = 'roadtracker-pro-v1';
-const DATA_CACHE_NAME = 'roadtracker-pro-data-v1';
+const CACHE_NAME = 'roadtracker-pro-v2';
+const DATA_CACHE_NAME = 'roadtracker-pro-data-v2';
 
 // Files to cache
 const FILES_TO_CACHE = [
@@ -9,11 +8,14 @@ const FILES_TO_CACHE = [
   '/index.html',
   '/offline.html',
   '/manifest.json',
-  '/assets/index.css',
-  '/assets/index.js',
+  '/icons/icon-72x72.png',
+  '/icons/icon-96x96.png',
+  '/icons/icon-128x128.png',
+  '/icons/icon-144x144.png',
+  '/icons/icon-152x152.png',
   '/icons/icon-192x192.png',
+  '/icons/icon-384x384.png',
   '/icons/icon-512x512.png',
-  '/assets/volvo-truck.png'
 ];
 
 // Install service worker
@@ -27,6 +29,7 @@ self.addEventListener('install', (event) => {
     })
   );
   
+  // Force the waiting service worker to become active
   self.skipWaiting();
 });
 
@@ -45,14 +48,15 @@ self.addEventListener('activate', (event) => {
     })
   );
   
+  // Take control immediately
   self.clients.claim();
 });
 
-// Fetch event - cache strategy: network first, fallback to cache
+// Fetch event - network-first strategy for API calls, cache-first for assets
 self.addEventListener('fetch', (event) => {
   console.log('[ServiceWorker] Fetch', event.request.url);
   
-  // Cache API requests separately
+  // For API calls, use network-first strategy
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       caches.open(DATA_CACHE_NAME).then((cache) => {
@@ -63,7 +67,7 @@ self.addEventListener('fetch', (event) => {
             }
             return response;
           })
-          .catch((err) => {
+          .catch(() => {
             return cache.match(event.request);
           });
       })
@@ -71,7 +75,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For all other requests, use a cache-first strategy
+  // For all other requests, try the cache first, fall back to network
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request)
@@ -81,16 +85,59 @@ self.addEventListener('fetch', (event) => {
             return caches.open(CACHE_NAME)
               .then((cache) => cache.match('/offline.html'));
           }
+          
+          // For image requests, return a placeholder if offline
+          if (event.request.destination === 'image') {
+            return caches.match('/placeholder.svg');
+          }
         });
     })
   );
 });
 
-// Handle offline synchronization
+// Handle background sync for deferred operations
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-time-entries') {
-    // This would handle syncing time entries when back online
-    // In a full implementation, this could sync with a backend
     console.log('[ServiceWorker] Syncing time entries');
+    // Implementation would sync local data with server when back online
   }
+});
+
+// Listen for push notifications
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      data: {
+        url: data.url || '/'
+      }
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // If a window is already open, focus it
+      for (const client of clientList) {
+        if (client.url === event.notification.data.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(event.notification.data.url);
+      }
+    })
+  );
 });
