@@ -5,6 +5,10 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.roadtrackerpro',
   appName: 'RoadTracker Pro 2024',
   webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+    allowNavigation: ['*'],
+  },
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
@@ -21,6 +25,10 @@ const config: CapacitorConfig = {
       resize: true,
       style: "dark",
       resizeOnFullScreen: true
+    },
+    // Add PWAConfig for Capacitor PWA Elements
+    PWA: {
+      enabled: true
     }
   },
   android: {

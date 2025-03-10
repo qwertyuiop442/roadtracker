@@ -33,15 +33,47 @@
       font-size: 64px;
       margin-bottom: 20px;
     }
+    .button {
+      background-color: #1e40af;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1a202c;
+        color: #f0f9ff;
+      }
+      .container {
+        background-color: #2d3748;
+        color: #f0f9ff;
+      }
+      .button {
+        background-color: #4299e1;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="truck-icon">🚚</div>
-    <h1>Sin conexión</h1>
-    <p>RoadTracker Pro está funcionando en modo sin conexión.</p>
-    <p>Todos tus datos están guardados localmente y estarán disponibles cuando vuelvas a conectarte.</p>
-    <p>Intenta recargar la aplicación para acceder a todas las funciones.</p>
+    <h1>RoadTracker Pro - Modo Sin Conexión</h1>
+    <p>Actualmente estás usando la aplicación sin conexión a internet.</p>
+    <p>Todos tus datos están guardados localmente y puedes seguir utilizando la aplicación con normalidad.</p>
+    <p>Cuando recuperes la conexión, podrás acceder a todas las funciones online si es necesario.</p>
+    <button class="button" onclick="window.location.reload()">Intentar reconectar</button>
   </div>
+  <script>
+    // Check if we're in standalone mode (PWA installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      document.querySelector('.container').innerHTML += '<p><strong>App instalada correctamente.</strong> Estás usando la versión PWA de RoadTracker Pro.</p>';
+    } else {
+      document.querySelector('.container').innerHTML += '<p>Para una mejor experiencia sin conexión, considera instalar la aplicación desde el navegador.</p>';
+    }
+  </script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import TruckHeader from "./TruckHeader";
+import PWAInstallPrompt from "./PWAInstallPrompt";
 
 const Layout = () => {
   return (
@@ -10,6 +11,7 @@ const Layout = () => {
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 text-foreground">
         <Outlet />
       </main>
+      <PWAInstallPrompt />
       <Navbar />
     </div>
   );
